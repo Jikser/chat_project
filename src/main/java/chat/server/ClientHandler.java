@@ -80,11 +80,25 @@ public class ClientHandler {
         } else {
           out.writeUTF("* Участника с ником " + to + " нет в чат-комнате");
         }
-      } else {
-        myServer.broadcastMsg(name + ": " + strFromClient);
+      } else if (strFromClient.startsWith("/nick")) {
+          String[] parts = strFromClient.split("\\s");
+          if (parts.length != 2) {
+            out.writeUTF("Неверный формат ввода, попоробуйте /nick новый ник");
+            continue;
+          }
+          String nickTo = parts[1];
+          if (myServer.getAuthService().changeNick(name, nickTo)) {
+            myServer.broadcastMsg(this.name + "теперь известен как " + nickTo);
+            this.name = nickTo;
+            myServer.broadcastClientsList();
+          } else {
+            out.writeUTF("Такой ник уже существует.");
+          }
+        } else {
+          myServer.broadcastMsg(name + ": " + strFromClient);
+        }
       }
     }
-  }
 
   public void sendMsg(String msg) {
     try {
