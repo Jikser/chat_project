@@ -25,6 +25,7 @@ public class NetworkChat extends JFrame {
   private DataInputStream in;
   private DataOutputStream out;
   private String nick = "";
+  private String login = "";
 
   public NetworkChat() {
     setTitle("Сетевой чат");
