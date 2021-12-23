@@ -4,9 +4,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class ClientHandler {
+  public static ExecutorService clientPool = Executors.newCachedThreadPool();
+
   private MyServer myServer;
   private Socket socket;
   private DataInputStream in;
@@ -25,7 +29,7 @@ public class ClientHandler {
       this.in = new DataInputStream(socket.getInputStream());
       this.out = new DataOutputStream(socket.getOutputStream());
       this.name = "";
-      new Thread(() -> {
+      clientPool.execute(() -> {
         try {
           authentication();
           readMessages();
@@ -34,7 +38,7 @@ public class ClientHandler {
         } finally {
           closeConnection();
         }
-      }).start();
+      });
     } catch (IOException e) {
       throw new RuntimeException("Проблемы при создании обработчика клиента");
     }
@@ -48,7 +52,7 @@ public class ClientHandler {
         String nick = myServer.getAuthService().getNickByLoginPass(parts[1], parts[2]);
         if (nick != null) {
           if (!myServer.isNickBusy(nick)) {
-            sendMsg("/authok " + nick);
+            sendMsg("/authok " + nick + " " + parts[1]);
             name = nick;
             myServer.broadcastMsg(name + " зашел в чат");
             myServer.subscribe(this);
